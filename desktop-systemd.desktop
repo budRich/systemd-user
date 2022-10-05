@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=desktop-systemd
+Comment=improved dynamic tiling window managersssssss
+Exec=desktop-ini
+Type=Application
+X-LightDM-DesktopName=desktop-systemd
+DesktopNames=desktop-systemd
+Keywords=tiling;wm;windowmanager;window;manager;

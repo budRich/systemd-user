@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# proxy for xinitrc
+
+# setup ssh-agent to use gnome-keyring
+
+: "${XDG_RUNTIME_DIR:=/run/user/$UID}"
+export SSH_AUTH_SOCK=$XDG_RUNTIME_DIR/keyring/ssh
+
+export XDG_CURRENT_DESKTOP=XFCE
+
+dbus-update-activation-environment --systemd --all
+systemctl --user start --wait i3.service
+

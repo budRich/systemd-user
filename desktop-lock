@@ -1,0 +1,94 @@
+#!/bin/bash
+# https://bitbucket.org/raymonad/xss-lock/raw/1e158fb20108058dbd62bd51d8e8c003c0a48717/doc/transfer-sleep-lock-generic-delay.sh
+# https://github.com/google/xsecurelock/blob/master/test/run-test.sh
+
+# main reason for this script is to reliably execute stuff
+# before (pre_lock) and after (post_lock) the actual lock
+
+pre_lock() {
+  # mediacontrol pause
+  dunstctl set-paused true
+}
+
+post_lock() {
+  # systemctl --user restart switcharoo@horizontal
+  dunstctl set-paused false
+  # xset s 0 0
+  # xset dpms 0 0 0
+  exit
+}
+
+export XSECURELOCK_PASSWORD_PROMPT=cursor    # default prompt
+export XSECURELOCK_PASSWORD_PROMPT=asterisks
+export XSECURELOCK_PASSWORD_PROMPT=hidden
+export XSECURELOCK_PASSWORD_PROMPT=time
+export XSECURELOCK_PASSWORD_PROMPT=time_hex
+
+# mixed font prompts seems to be broken... (libxft?)
+# export XSECURELOCK_PASSWORD_PROMPT=disco
+# export XSECURELOCK_PASSWORD_PROMPT=emoticon
+# export XSECURELOCK_PASSWORD_PROMPT=kaomoji
+# export XSECURELOCK_PASSWORD_PROMPT=emoji
+
+export XSECURELOCK_AUTH_BACKGROUND_COLOR='#000000'
+export XSECURELOCK_AUTH_FOREGROUND_COLOR='#FFFFFF'
+export XSECURELOCK_AUTH_WARNING_COLOR='#FF0000'
+
+export XSECURELOCK_AUTH_TIMEOUT=10
+# number of idle seconds before hiding the prompt
+
+export XSECURELOCK_DISCARD_FIRST_KEYPRESS=0
+# the default for DISCARD_FIRST_KEYPRESS is 1
+# if it is set to 1, the first keypress will 
+# not be part of the password
+
+export XSECURELOCK_FONT="monospace"
+export XSECURELOCK_DATETIME_FORMAT="%H:%M"
+export XSECURELOCK_SHOW_DATETIME=0
+export XSECURELOCK_SHOW_HOSTNAME=1 # 0 = disable , 2 = longform
+export XSECURELOCK_SHOW_USERNAME=1
+
+export XSECURELOCK_BLANK_DPMS_STATE=on
+# specifies which DPMS state to put the screen in when blanking.
+# one of: standby, suspend, off and on.
+# where "on" means to not invoke DPMS at all.
+
+export XSECURELOCK_SAVER=saver_xscreensaver
+export XSECURELOCK_XSCREENSAVER_PATH=/usr/libexec/xscreensaver
+# use XScreenSaver as background
+
+pre_lock
+
+declare -i lock_pid
+# trap 'kill $lock_pid && kill -9 -1' TERM INT
+
+if [[ -e /dev/fd/${XSS_SLEEP_LOCK_FD:--1} ]]; then
+  # lock fd opened by xss-lock (suspend/hibernate)
+  # systemctl suspend
+
+  fifo_lock=$XDG_RUNTIME_DIR/xsecurelock.notify
+  mkfifo "$fifo_lock"
+
+  xsecurelock -- cat "$fifo_lock" & lock_pid=$!
+
+  echo "Waiting for lock..."
+  : > "$fifo_lock"
+  echo "Locked."
+
+  # now close our fd to signal xss-lock we're ready to sleep
+  exec {XSS_SLEEP_LOCK_FD}<&-
+
+else
+  # normal lock (no sleep or suspend)
+  # triggered by auto timers:
+  #   - xset s 600 5
+  #   - xset dpms 777 777 777
+  # or manual:
+  #   - xset s activate
+  xsecurelock & lock_pid=$!
+fi
+
+# if xsecurelock fail: kill 'em all
+wait $lock_pid || kill -9 -1
+
+post_lock
