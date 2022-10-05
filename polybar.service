@@ -1,0 +1,10 @@
+[Unit]
+Description=polybar
+PartOf=graphical-session.target
+
+Wants=i3.service
+After=i3.service
+
+[Service]
+ExecStart=polybar
+Restart=on-failure

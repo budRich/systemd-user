@@ -1,0 +1,9 @@
+[Unit]
+Description=xfce applications
+PartOf=graphical-session.target
+
+Wants=dbus.socket
+
+Wants=xfce4-panel.service
+Wants=thunar-daemon.service
+Wants=xfsettingsd.service

@@ -1,0 +1,20 @@
+[Unit]
+Description=i3 tiling window manager
+PartOf=graphical-session.target
+
+Wants=mate-polkit.service
+Wants=xss-lock.service
+
+Wants=reload-i3.path
+Wants=reload-systemd.path
+
+Wants=xfce4-panel.service
+Wants=thunar-daemon.service
+Wants=xfsettingsd.service
+
+#Wants=polybar.service
+
+[Service]
+Type=notify
+ExecStart=i3
+ExecStop=systemctl --user stop --no-block graphical-session.target

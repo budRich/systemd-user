@@ -1,0 +1,8 @@
+[Unit]
+Description=xss-lock
+PartOf=graphical-session.target
+
+[Service]
+#ExecStart=xss-lock --transfer-sleep-lock -- i3lock --nofork --image %h/win7.png
+ExecStart=xss-lock --transfer-sleep-lock --notifier /usr/libexec/xsecurelock/dimmer -- new-lock
+Restart=always

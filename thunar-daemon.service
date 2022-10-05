@@ -1,0 +1,14 @@
+[Unit]
+Description=thunar daemon
+PartOf=xfce.target
+PartOf=graphical-session.target
+
+[Service]
+Type=dbus
+BusName=org.xfce.FileManager
+ExecStart=thunar --daemon
+
+KillMode=none
+ExecStop=thunar --quit
+
+Restart=on-failure
